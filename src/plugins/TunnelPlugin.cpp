@@ -6,6 +6,10 @@
 #include "configuration.h"
 #include <Arduino.h>
 
+//Master node stuff
+#include <WiFi.h>
+#include <EEPROM.h>
+
 #include <assert.h>
 
 #define RXD2 16
@@ -28,12 +32,92 @@ TunnelPluginRadio::TunnelPluginRadio() : SinglePortPlugin("TunnelPluginRadio", P
     boundChannel = Channels::serialChannel;
 }
 
+char* ssid = "test_network";
+char* password = "password";
+
 int32_t TunnelPlugin::runOnce()
 {
 #ifndef NO_ESP32
 
+// //Test sending
+    // tunnelPluginRadio->sendPayload();
+    // //Create zeroed packet hopefully
+    // MeshPacket *p =packetPool.allocZeroed();
+    // //p->channel
+    // //p->decoded.dest
+    // //p->decoded.payload.bytes
+    // //p->decoded.payload.size = pb_encode_to_bytes(p->decoded.payload.bytes, sizeof(p->decoded.payload.bytes), fields, &payload);
+    // //p->decoded.portnum
+    // //p->decoded.request_id
+    // //p->decoded.source
+    // p->decoded.want_response = false;
+    // //p->encrypted.bytes
+    // //p->encrypted.size
+    // p->from = nodeDB.getNodeNum();
+    // p->hop_limit = HOP_RELIABLE; //3
+    // p->id = generatePacketId(); //Creates unique packet id
+    // p->priority = MeshPacket_Priority_BACKGROUND;
+    // //p->rx_rssi
+    // //p->rx_snr
+    // //TODO: no idea what this is doing
+    // p->rx_time = getValidTime(RTCQualityFromNet); // Just in case we process the packet locally - make sure it has a valid timestamp
+    
+    // //Send to broadcast address (so all nodes will hopefully recieve it)
+    // p->to = NODENUM_BROADCAST;
+    // //p->want_ack
+    // p->which_payloadVariant = MeshPacket_decoded_tag; //assumes payload is decoded at the start?
+    // service.sendToMesh(p);
+    
+    // //NEED TO FREE OR NAH?
+    // free(p);
+    
+    //END TEST CODE
+    
+    //Wifi config test
+    //Plain text bad?
+    //CONNECTION TO WIFI WORKS
+    if (firstTime) {
+        DEBUG_MSG("Trying to connect to wifi\n");
+        WiFi.begin(ssid, password);
+        DEBUG_MSG("Finished trying to connect to wifi\n");
+        
+        //EEPROM TEST
+        byte saved_byte = EEPROM.readByte(0);
+        DEBUG_MSG("eeprom after restart saved: %d\n", saved_byte);
+        DEBUG_MSG("WRITING 69 TO EEPROM\n");
+        
+        byte test = 'a';
+        EEPROM.begin(0x20);
+        delay(2000); // Some delay
+        EEPROM.put(512, test);
+        EEPROM.commit();
+        
+    }
+    
+    byte saved_byte = EEPROM.readByte(512);
+    
+    DEBUG_MSG("eeprom saved: %d\n", saved_byte);
+    EEPROM.put(512, 3);
+    EEPROM.commit();
+    
+    //Try to receive message
+    
+        //Save it to eeprom maybe with sent counter
+        
+        //eeprom has 512 bytes of memory
+        
+    if (WiFi.isConnected()) {
+        DEBUG_MSG("connected to wifi\n");
+        
+        //Send eprom messages and increment counter​
+        //If counter is > 3 or whatever
+            //Delete from eeprom        
+    }
+    //end wifi config test
+
     radioConfig.preferences.tunnelplugin_enabled = 1;
     radioConfig.preferences.tunnelplugin_echo_enabled = 1;
+
 
     if (radioConfig.preferences.tunnelplugin_enabled) {
 
