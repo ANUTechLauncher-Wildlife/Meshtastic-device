@@ -1,10 +1,11 @@
 #pragma once
-
-#include "SinglePortPlugin.h"
+#include "ProtobufPlugin.h"
+#include "mesh/generated/tag_sighting.pb.h"
 #include "concurrency/OSThread.h"
 #include "configuration.h"
 #include <Arduino.h>
 #include <functional>
+#include <WiFiClientSecure.h>
 
 #ifdef HAS_EINK
 // The screen is bigger so use bigger fonts
@@ -17,59 +18,29 @@
 #define FONT_LARGE ArialMT_Plain_24
 #endif
 
-class TunnelPlugin : private concurrency::OSThread
+class TunnelPlugin : public ProtobufPlugin<TagSightingMessage>, private concurrency::OSThread
 {
     bool firstTime = 1;
 
   public:
-    TunnelPlugin();
+    TunnelPlugin(): ProtobufPlugin("tunnelplugin", PortNum_TUNNEL_APP, TagSightingMessage_fields), concurrency::OSThread(
+                                                                                                 "TunnelPlugin")
+    {
+      lastSightingPacket = nullptr;
+    }
 
-  protected:
-    virtual int32_t runOnce();
-};
-
-extern TunnelPlugin *tunnelPlugin;
-
-/*
- * Radio interface for SerialPlugin
- *
- */
-class TunnelPluginRadio : public SinglePortPlugin
-{
-    uint32_t lastRxID;
-
-  public:
-    /*
-        TODO: Switch this to PortNum_SERIAL_APP once the change is able to be merged back here
-              from the main code.
-    */
-
-    TunnelPluginRadio();
-
-    /**
-     * Send our payload into the mesh
-     */
-    void sendPayload(NodeNum dest = NODENUM_BROADCAST, bool wantReplies = false);
-  
-    #ifndef NO_SCREEN
-      virtual void drawFrame(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y) { 
-        display->setTextAlignment(TEXT_ALIGN_CENTER);
-        display->setFont(FONT_SMALL);
-        display->drawString(64 + x, y, "Tunnel");
-       }
-    #endif
+    void sendPayload(char* tagId, NodeNum dest = NODENUM_BROADCAST, bool wantReplies = false);
+    virtual void drawFrame(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, int16_t y);
   
   protected:
-    virtual MeshPacket *allocReply();
-
-    /** Called to handle a particular incoming message
-
-    @return true if you've guaranteed you've handled this message and no other handlers should be considered for it
-    */
-    virtual bool handleReceived(const MeshPacket &mp);
-
+    const char* url = "http://wildlife-server.azurewebsites.net/api/Devices/AnimalSighted?TagId=%s&TrackerId=%u&SightingTime=%u&Latitude=%d&Longitude=%d";
+  
+    virtual MeshPacket *allocReply(char* tagId);
+    virtual bool handleReceivedProtobuf(const MeshPacket &mp, const TagSightingMessage *pptr);
     virtual bool wantUIFrame() { return true; }
+    virtual int32_t runOnce();
 
+    const MeshPacket *lastSightingPacket;
 };
 
-extern TunnelPluginRadio *tunnelPluginRadio;
+extern TunnelPlugin tunnelPlugin;

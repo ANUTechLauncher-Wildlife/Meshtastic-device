@@ -38,14 +38,14 @@ bool isWifiAvailable()
     const char *wifiName = radioConfig.preferences.wifi_ssid;
     const char *wifiPsw = radioConfig.preferences.wifi_password;
 
-    // strcpy(radioConfig.preferences.wifi_ssid, "meshtastic");
-    // strcpy(radioConfig.preferences.wifi_password, "meshtastic!");
+    strcpy(radioConfig.preferences.wifi_ssid, "MongrelNet");
+    strcpy(radioConfig.preferences.wifi_password, "DentedGin123!");
 
-    // strcpy(radioConfig.preferences.wifi_ssid, "meshtasticAdmin");
-    // strcpy(radioConfig.preferences.wifi_password, "12345678");
+    // strcpy(radioConfig.preferences.wifi_ssid, "iPhone");
+    // strcpy(radioConfig.preferences.wifi_password, "123456789");
 
     // radioConfig.preferences.wifi_ap_mode = true;
-    // radioConfig.preferences.wifi_ap_mode = false;
+    radioConfig.preferences.wifi_ap_mode = false;
 
     if (*wifiName && *wifiPsw) {
         return 1;
